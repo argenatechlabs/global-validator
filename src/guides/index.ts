@@ -1,5 +1,9 @@
 import type { CountryCode, LocaleCode, ValidationType } from "../types";
-import type { GetGuideOptions, GuideMeta } from "./types";
+import type {
+  GetGuideOptions,
+  GuideFormat,
+  GuideMeta,
+} from "./types";
 
 import { getAvailableCountries, getCountrySummary } from "../countries";
 import {
@@ -8,7 +12,17 @@ import {
   getSupportedExampleCountries,
 } from "../examples";
 
-const locales: LocaleCode[] = ["en", "tr", "de", "es", "fr", "it", "ru", "uk", "az"];
+const locales: LocaleCode[] = [
+  "en",
+  "tr",
+  "de",
+  "es",
+  "fr",
+  "it",
+  "ru",
+  "uk",
+  "az",
+];
 
 const validatorTypes: ValidationType[] = [
   "email",
@@ -50,7 +64,7 @@ const section = {
   best: "Best Practices / En İyi Kullanım",
 };
 
-function code(value: string, lang = "ts") {
+function code(value: string, lang = "ts"): string {
   return `\`\`\`${lang}\n${value.trim()}\n\`\`\``;
 }
 
@@ -62,7 +76,18 @@ function toText(markdown: string): string {
     .trim();
 }
 
-function buildValidatorReference(country?: CountryCode, locale: LocaleCode = "en") {
+function getSafeLocale(locale?: LocaleCode): LocaleCode {
+  if (locale && locales.includes(locale)) {
+    return locale;
+  }
+
+  return "en";
+}
+
+function buildValidatorReference(
+  country?: CountryCode,
+  locale: LocaleCode = "en",
+): string {
   const examples = country ? getExamples(country) : getExamples();
 
   return `
@@ -78,6 +103,10 @@ validate("test@example.com", {
   locale: "${locale}"
 });
 `)}
+
+### Available Validation Types
+
+${code(JSON.stringify(validatorTypes, null, 2), "json")}
 
 ### Email
 
@@ -137,6 +166,45 @@ validate("${examples.taxId ?? "1234567890"}", {
 });
 `)}
 
+### Card
+
+${code(`
+validate("${examples.card ?? "4111111111111111"}", {
+  type: "card",
+  locale: "${locale}"
+});
+`)}
+
+### URL
+
+${code(`
+validate("${examples.url ?? "https://example.com"}", {
+  type: "url",
+  locale: "${locale}"
+});
+`)}
+
+### File
+
+${code(`
+validate(
+  {
+    name: "logo.png",
+    size: 1200,
+    type: "image/png"
+  },
+  {
+    type: "file",
+    locale: "${locale}",
+    file: {
+      maxSize: 2_000_000,
+      allowedTypes: ["image/png", "image/jpeg"],
+      allowedExtensions: ["png", "jpg", "jpeg"]
+    }
+  }
+);
+`)}
+
 ### Password
 
 ${code(`
@@ -177,7 +245,10 @@ validate("${examples.passport ?? "U12345678"}", {
 `.trim();
 }
 
-function buildFormGuide(country?: CountryCode, locale: LocaleCode = "en") {
+function buildFormGuide(
+  country?: CountryCode,
+  locale: LocaleCode = "en",
+): string {
   const examples = country ? getExamples(country) : getExamples("TR");
 
   return `
@@ -232,7 +303,10 @@ console.log(result.fields);
 `.trim();
 }
 
-function buildFormatterGuide(country?: CountryCode, locale: LocaleCode = "en") {
+function buildFormatterGuide(
+  country?: CountryCode,
+  locale: LocaleCode = "en",
+): string {
   const examples = country ? getExamples(country) : getExamples("TR");
 
   return `
@@ -269,7 +343,7 @@ formatRelativeDate("2026-06-22", {
 `.trim();
 }
 
-function buildSecurityGuide(country?: CountryCode) {
+function buildSecurityGuide(country?: CountryCode): string {
   const examples = country ? getExamples(country) : getExamples("TR");
 
   return `
@@ -303,12 +377,12 @@ slugify("Türkçe Başlık Deneme");
 `.trim();
 }
 
-function buildCountryTable() {
+function buildCountryTable(): string {
   const rows = getAvailableCountries()
     .map((country) => {
-      const s = getCountrySummary(country);
+      const summary = getCountrySummary(country);
 
-      return `| ${country} | ${s.name} | ${s.supported.phone ? "✅" : "❌"} | ${s.supported.postalCode ? "✅" : "❌"} | ${s.supported.iban ? "✅" : "❌"} | ${s.supported.nationalId ? "✅" : "❌"} | ${s.supported.taxId ? "✅" : "❌"} | ${s.supported.passport ? "✅" : "❌"} |`;
+      return `| ${country} | ${summary.name} | ${summary.supported.phone ? "✅" : "❌"} | ${summary.supported.postalCode ? "✅" : "❌"} | ${summary.supported.iban ? "✅" : "❌"} | ${summary.supported.nationalId ? "✅" : "❌"} | ${summary.supported.taxId ? "✅" : "❌"} | ${summary.supported.passport ? "✅" : "❌"} |`;
     })
     .join("\n");
 
@@ -321,9 +395,12 @@ ${rows}
 `.trim();
 }
 
-function buildExamplesSection(country?: CountryCode) {
+function buildExamplesSection(country?: CountryCode): string {
   const examples = country ? getExamples(country) : getExamples();
-  const availableTypes = country ? getAvailableExampleTypes(country) : getAvailableExampleTypes();
+
+  const availableTypes = country
+    ? getAvailableExampleTypes(country)
+    : getAvailableExampleTypes();
 
   return `
 ## ${section.examples}
@@ -357,7 +434,7 @@ getSupportedExampleCountries();
 `.trim();
 }
 
-function buildResultStructure() {
+function buildResultStructure(): string {
   return `
 ## ${section.errors}
 
@@ -383,12 +460,12 @@ type ValidationResult = {
 
 ${code(`
 {
-  valid: true,
-  type: "phone",
-  country: "TR",
-  locale: "tr",
-  normalized: "+905551112233",
-  message: "Geçerli telefon numarası."
+  "valid": true,
+  "type": "phone",
+  "country": "TR",
+  "locale": "tr",
+  "normalized": "+905551112233",
+  "message": "Geçerli telefon numarası."
 }
 `, "json")}
 
@@ -396,18 +473,18 @@ ${code(`
 
 ${code(`
 {
-  valid: false,
-  type: "phone",
-  country: "TR",
-  locale: "tr",
-  message: "Geçersiz telefon numarası.",
-  code: "INVALID_PHONE_TR"
+  "valid": false,
+  "type": "phone",
+  "country": "TR",
+  "locale": "tr",
+  "message": "Geçersiz telefon numarası.",
+  "code": "INVALID_PHONE_TR"
 }
 `, "json")}
 `.trim();
 }
 
-function buildBestPractices() {
+function buildBestPractices(): string {
   return `
 ## ${section.best}
 
@@ -424,7 +501,41 @@ function buildBestPractices() {
 `.trim();
 }
 
-function buildCommonGuide(locale: LocaleCode) {
+function buildAutoGuideInfo(): string {
+  return `
+## Automatic Guide File
+
+When \`getGuide()\` runs, the package automatically creates a guide file.
+
+### Node.js
+
+${code(`
+getGuide({
+  country: "TR",
+  locale: "tr"
+});
+
+// Automatically creates:
+// docs/TR-tr-guide.md
+`)}
+
+### Browser
+
+${code(`
+getGuide({
+  country: "TR",
+  locale: "tr"
+});
+
+// Automatically downloads:
+// TR-tr-guide.md
+`)}
+
+No extra create function is required.
+`.trim();
+}
+
+function buildCommonGuide(locale: LocaleCode): string {
   return `
 # Argena Global Validator Guide
 
@@ -472,11 +583,16 @@ ${buildExamplesSection(undefined)}
 
 ${buildResultStructure()}
 
+${buildAutoGuideInfo()}
+
 ${buildBestPractices()}
 `.trim();
 }
 
-function buildCountryGuide(country: CountryCode, locale: LocaleCode) {
+function buildCountryGuide(
+  country: CountryCode,
+  locale: LocaleCode,
+): string {
   const summary = getCountrySummary(country);
 
   return `
@@ -500,18 +616,140 @@ ${buildExamplesSection(country)}
 
 ${buildResultStructure()}
 
+${buildAutoGuideInfo()}
+
 ${buildBestPractices()}
 `.trim();
 }
 
+function getGuideFileName(options: {
+  country?: CountryCode;
+  locale: LocaleCode;
+  format: GuideFormat;
+}): string {
+  const extension = options.format === "text" ? "txt" : "md";
+
+  if (options.country) {
+    return `${options.country}-${options.locale}-guide.${extension}`;
+  }
+
+  return `common-${options.locale}-guide.${extension}`;
+}
+
+function isBrowser(): boolean {
+  return (
+    typeof globalThis !== "undefined" &&
+    typeof window !== "undefined" &&
+    typeof document !== "undefined"
+  );
+}
+
+function downloadGuideInBrowser(fileName: string, content: string): void {
+  try {
+    const blob = new Blob([content], {
+      type: fileName.endsWith(".md")
+        ? "text/markdown;charset=utf-8"
+        : "text/plain;charset=utf-8",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = fileName;
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  } catch {
+    // Silent fail.
+  }
+}
+
+function saveGuideInNode(fileName: string, content: string): void {
+  try {
+    const dynamicImport = new Function(
+      "specifier",
+      "return import(specifier)",
+    ) as (specifier: string) => Promise<{
+      mkdir: (
+        path: string,
+        options?: { recursive?: boolean },
+      ) => Promise<void>;
+      writeFile: (
+        path: string,
+        data: string,
+        encoding: "utf-8",
+      ) => Promise<void>;
+    }>;
+
+    dynamicImport("node:fs/promises")
+      .then(async (fs) => {
+        await fs.mkdir("docs", {
+          recursive: true,
+        });
+
+        await fs.writeFile(
+          `docs/${fileName}`,
+          content,
+          "utf-8",
+        );
+      })
+      .catch(() => {
+        // Silent fail.
+      });
+  } catch {
+    // Silent fail.
+  }
+}
+
+function autoSaveGuide(options: {
+  content: string;
+  country?: CountryCode;
+  locale: LocaleCode;
+  format: GuideFormat;
+  autoSave?: boolean;
+}): void {
+  if (options.autoSave === false) {
+    return;
+  }
+
+  const fileName = getGuideFileName({
+    country: options.country,
+    locale: options.locale,
+    format: options.format,
+  });
+
+  if (isBrowser()) {
+    downloadGuideInBrowser(fileName, options.content);
+    return;
+  }
+
+  saveGuideInNode(fileName, options.content);
+}
+
 export function getGuide(options: GetGuideOptions = {}): string {
-  const locale = options.locale ?? "en";
+  const locale = getSafeLocale(options.locale);
+  const format = options.format ?? "markdown";
 
   const guide = options.country
     ? buildCountryGuide(options.country, locale)
     : buildCommonGuide(locale);
 
-  return options.format === "text" ? toText(guide) : guide;
+  const content = format === "text" ? toText(guide) : guide;
+
+  autoSaveGuide({
+    content,
+    country: options.country,
+    locale,
+    format,
+    autoSave: options.autoSave,
+  });
+
+  return content;
 }
 
 export function getAvailableGuideCountries(): CountryCode[] {
@@ -522,23 +760,40 @@ export function getAvailableGuideLocales(): LocaleCode[] {
   return locales;
 }
 
-export function hasGuide(country?: CountryCode, locale: LocaleCode = "en"): boolean {
-  if (!locales.includes(locale)) return false;
-  if (!country) return true;
+export function hasGuide(
+  country?: CountryCode,
+  locale: LocaleCode = "en",
+): boolean {
+  if (!locales.includes(locale)) {
+    return false;
+  }
+
+  if (!country) {
+    return true;
+  }
 
   return getAvailableCountries().includes(country);
 }
 
 export function getGuideMeta(
   country?: CountryCode,
-  locale: LocaleCode = "en"
+  locale: LocaleCode = "en",
 ): GuideMeta {
+  const safeLocale = getSafeLocale(locale);
+  const format: GuideFormat = "markdown";
+
   return {
     country,
-    locale,
+    locale: safeLocale,
+    format,
+    fileName: getGuideFileName({
+      country,
+      locale: safeLocale,
+      format,
+    }),
     title: country
-      ? `${country} guide (${locale})`
-      : `Common guide (${locale})`,
+      ? `${country} guide (${safeLocale})`
+      : `Common guide (${safeLocale})`,
     updatedAt: "2026-06-22",
   };
 }

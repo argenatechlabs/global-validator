@@ -1,58 +1,81 @@
 {
-  "name": "@argena/global-validator",
-  "version": "1.0.0",
-  "description": "Global validation, formatting, security and localization toolkit for TypeScript and JavaScript.",
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "sideEffects": false,
-  "scripts": {
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "prepublishOnly": "npm run build && npm run test:run"
-  },
-  "keywords": [
-    "validator",
-    "validation",
-    "typescript",
-    "email",
-    "phone",
-    "iban",
-    "passport",
-    "country",
-    "locale",
-    "form",
-    "security",
-    "formatter"
-  ],
-  "author": "Argena Tech Labs",
-  "license": "MIT",
-  "homepage": "https://github.com/argena-tech-labs/global-validator#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/argena-tech-labs/global-validator.git"
-  },
-  "bugs": {
-    "url": "https://github.com/argena-tech-labs/global-validator/issues"
-  },
-  "devDependencies": {
-    "tsup": "latest",
-    "typescript": "latest",
-    "vitest": "latest"
-  }
+"name": "@argena/global-validator",
+"version": "1.0.0",
+"description": "Global validation, formatting, security, localization and form toolkit for TypeScript and JavaScript.",
+"license": "MIT",
+"author": "Argena Tech Labs",
+"type": "module",
+
+"main": "./dist/index.cjs",
+"module": "./dist/index.js",
+"types": "./dist/index.d.ts",
+
+"exports": {
+".": {
+"types": "./dist/index.d.ts",
+"import": "./dist/index.js",
+"require": "./dist/index.cjs"
+}
+},
+
+"files": [
+"dist",
+"README.md",
+"LICENSE"
+],
+
+"sideEffects": false,
+
+"homepage": "https://github.com/argenatechlabs/global-validator#readme",
+
+"repository": {
+"type": "git",
+"url": "git+https://github.com/argenatechlabs/global-validator.git"
+},
+
+"bugs": {
+"url": "https://github.com/argenatechlabs/global-validator/issues"
+},
+
+"keywords": [
+"validator",
+"validation",
+"typescript",
+"javascript",
+"email-validator",
+"phone-validator",
+"iban-validator",
+"passport-validator",
+"tax-id-validator",
+"national-id-validator",
+"form-validation",
+"security",
+"sanitizer",
+"formatter",
+"localization",
+"i18n",
+"global-validator"
+],
+
+"scripts": {
+"dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+"build": "tsup src/index.ts --format esm,cjs --dts --clean",
+"test": "vitest",
+"test:run": "vitest run",
+"prepublishOnly": "npm run build && npm run test:run"
+},
+
+"engines": {
+"node": ">=18"
+},
+
+"publishConfig": {
+"access": "public"
+},
+
+"devDependencies": {
+"tsup": "^8.2.4",
+"typescript": "^5.8.3",
+"vitest": "^3.2.4"
+}
 }

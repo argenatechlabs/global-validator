@@ -6,11 +6,14 @@ export type GetGuideOptions = {
   country?: CountryCode;
   locale?: LocaleCode;
   format?: GuideFormat;
+  autoSave?: boolean;
 };
 
 export type GuideMeta = {
   country?: CountryCode;
   locale: LocaleCode;
+  format: GuideFormat;
+  fileName: string;
   title: string;
   updatedAt: string;
 };
